@@ -85,8 +85,6 @@ for query in ref_str.split("["):
             print(f"Querying [{query_str}]...\n")
             queryURL = URL + query_str + "&btnG="
 
-            # querys = [q.lower() for q in querys]
-
             response = requests.get(queryURL, headers = {'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36', 'cookie' : GOOGLE_COOKIE})
             
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -99,22 +97,10 @@ for query in ref_str.split("["):
                     print(response.text)
                     exit()
                 continue
-            # else:
-            #     if len(results) == 0:
-            #         print(f"{bcolors.WARNING}No results..{bcolors.WHITE}")
-            #         summary_no_result += 1
-            #         continue
 
             result_inner = results.find_all(class_ = "gs_ri")
 
-            # manyFlag = True if len(result_inner) > 1 else False
-            # manyCnt = 0
             print(f"Total {len(result_inner)} results found.")
-
-            # if manyFlag:
-            #     print(f"{bcolors.WARNING}Total {len(result_inner)} results found. Check later.{bcolors.WHITE}")
-            # else:
-            #     print(f"Total {len(result_inner)} results found.")
 
             for result in result_inner:
                 title_el = result.find(class_="gs_rt").find("a")
@@ -125,7 +111,6 @@ for query in ref_str.split("["):
                 title = title_el.get_text()
 
                 for q in querys:
-                    # print(title, ";", q.lower(), SequenceMatcher(None, title.lower(), q.lower()).ratio())
                     if title is q:
                         title_similar = 1
                     else :
@@ -136,53 +121,6 @@ for query in ref_str.split("["):
 
             if title_similar >= 0.7:
                 break
-
-                # if result_index == len(result_inner) -1 and title_similar <= 0.5:
-                #     #kind of recursive; find until title matches
-                #     for q in querys:
-                #         query_str = q
-                                
-                #         print(f"Querying [{query_str}]...\n")
-                #         queryURL = URL + query_str + "&btnG="
-
-                #         # querys = [q.lower() for q in querys]
-
-                #         response = requests.get(queryURL, headers = {'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36', 'cookie' : GOOGLE_COOKIE})
-                        
-                #         soup = BeautifulSoup(response.text, 'html.parser')
-                #         result = soup.find(id="gs_res_ccl_mid")
-
-                #         if not response.ok or result is None:
-                #             print(f"{bcolors.FAIL}Connection Failed.. {bcolors.WHITE}")
-                #             if response.status_code == 429:
-                #                 print(response.headers)
-                #                 print(response.text)
-                #                 exit()
-                #             continue
-                #         else:
-                #             if len(result) == 0:
-                #                 continue
-
-                #         result_inner = result.find_all(class_ = "gs_ri")
-                #         result = result_inner[0]
-                #         title_el = title_el.find(class_="gs_rt").find("a")
-                    
-                #         if _title_el is None:
-                #             continue
-
-                #         title = title_el.get_text()
-
-                #         title_similar = max(SequenceMatcher(None, _title.lower(), q.lower()).ratio(), title_similar)
-
-                #         if(title_similar > 0.7):
-                #             break
-
-                # if manyFlag:
-                #     if title_similar > 0.5:
-                #         manyCnt += 1
-
-                #     if manyCnt == 0:
-                #         continue
 
         if title_similar < 0.7 or title_el is None or result is None:
             print(f"{bcolors.WARNING}No results..{bcolors.WHITE}")
@@ -278,10 +216,5 @@ for query in ref_str.split("["):
         # row.citation = citation_num
 
         time.sleep(1)
-        
-        # if manyCnt == 0 and manyFlag:
-        #     print(f"{bcolors.WARNING}Many results found, but none of the results matched.{bcolors.WHITE}")
-        #     summary_many_no_matching += 1
-
 
 print(f"{bcolors.OKGREEN}[Summary]\nOut of {summary_total_queried} querys,\nNo result : {summary_no_result}\n{bcolors.WHITE}")
