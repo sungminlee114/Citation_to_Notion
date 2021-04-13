@@ -160,7 +160,7 @@ for query in ref_str.split("["):
         
         search_res = cv.get_rows(search=title)
         if len(search_res) > 0 and search_res[0].name == title:
-            summary_exsisting += 1
+        #     print("Paper already is in table")
             print("Paper already is in table")
             continue
 
