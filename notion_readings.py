@@ -43,6 +43,8 @@ summary_total_queried = 0
 
 for query in ref_str.split("["):
     query = query[query.find("]")+1:]
+    if "http" in query and "//" in query:
+        continue
     if query:
         summary_total_queried += 1
         print(f"---[{summary_total_queried} : {len(query)}]---")
