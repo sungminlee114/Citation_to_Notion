@@ -36,17 +36,37 @@ ref_str = ref_str.replace("\n", " ")
 
 URL = "https://scholar.google.com/scholar?hl=ko&as_sdt=0%2C5&q="
 
+summary_exsisting = 0
+summary_no_result = 0
+summary_many_no_matching = 0
+summary_total_queried = 0
 
 for query in ref_str.split("["):
     query = query[query.find("]")+1:]
     if query:
-        print("-----")
-        print(f"Querying [{query}]...\n")
-        queryURL = URL + query + "&btnG="
-        querys = [q.strip() for q in query.split(".")]
+        summary_total_queried += 1
+        print(f"---[{summary_total_queried} : {len(query)}]---")
+        
+        querys =[q.strip() for q in query.split(".")]
+        query_str = ""
+        l = 0
+        for i, q in enumerate(querys):
+            if i < len(querys) - 1:
+                q+=". "
+                
+            l += len(q)
+            if(l < 250):
+                query_str += q
+                
+        print(f"Querying [{query_str}]...\n")
+        queryURL = URL + query_str + "&btnG="
 
         response = requests.get(queryURL, headers = {'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36', 'cookie' : GOOGLE_COOKIE})
-        if not response.ok:
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        results = soup.find(id="gs_res_ccl_mid")
+
+        if not response.ok or results is None:
             print(f"{bcolors.FAIL}Connection Failed.. {bcolors.WHITE}")
             if response.status_code == 429:
                 print(response.headers)
@@ -54,11 +74,9 @@ for query in ref_str.split("["):
                 exit()
             continue
         else:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            results = soup.find(id="gs_res_ccl_mid")
-
-            if(results is None or len(results) == 0):
+            if len(results) == 0:
                 print(f"{bcolors.WARNING}No results..{bcolors.WHITE}")
+                summary_no_result += 1
                 continue
 
             result_inner = results.find_all(class_ = "gs_ri")
@@ -77,7 +95,6 @@ for query in ref_str.split("["):
                 title = title_el.get_text()
 
                 if manyFlag:
-                    print(f"many :: {title}, {querys}")
                     if title not in querys:
                         continue
                     else:
@@ -85,6 +102,7 @@ for query in ref_str.split("["):
 
                 search_res = cv.get_rows(search=title)
                 if len(search_res) > 0 and search_res[0].name == title:
+                    summary_exsisting += 1
                     print("Paper already is in table")
                     continue
 
@@ -93,11 +111,10 @@ for query in ref_str.split("["):
                 author_str = result.find(class_ = "gs_a").get_text()
                 author_str = author_str.replace("\xa0", " ")
 
-                # print(author_str)
                 authors, journal, _ = author_str.split(" - ")
                 year = re.findall('\d{4}', journal)
                 if len(year) == 0:
-                    year = None
+                    year = -1
                 else:
                     year = year[0]
 
@@ -108,10 +125,11 @@ for query in ref_str.split("["):
                 else:
                     journal = _journal
                 
-                authors2 = authors.replace("…", "")[:authors.find(",")].split(" ")
+                authors2 = authors.replace("…,", "").replace("…", "")
+                authors2 = authors2[:authors2.find(",")].split(" ")
                 authors2 = [auth for auth in authors2 if len(auth)>1][0]
 
-                journal2 = journal.replace("…", "").rstrip().lstrip()
+                journal2 = journal.replace("…,", "").replace("…", "").rstrip().lstrip()
                 
                 flag_j = False
                 flag_a = False
@@ -134,7 +152,7 @@ for query in ref_str.split("["):
                 citation_str = result.find(class_="gs_fl")
                 citation_num = re.findall('\d*회', citation_str.get_text())
                 if len(citation_num) == 0:
-                    citation_num = None
+                    citation_num = 0
                 else:
                     citation_num = citation_num[0][:-1]
 
@@ -162,3 +180,8 @@ for query in ref_str.split("["):
             
             if manyCnt == 0 and manyFlag:
                 print(f"{bcolors.WARNING}Many results found, but none of the results matched.{bcolors.WHITE}")
+                summary_many_no_matching += 1
+
+
+print(f"{bcolors.OKGREEN}[Summary]\nOut of {summary_total_queried} of querys,\nExsisting : {summary_exsisting}\nNo result : {summary_no_result}\n Many but no matching result : {summary_many_no_matching}\n{bcolors.White}")
+
