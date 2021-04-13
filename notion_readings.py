@@ -88,6 +88,9 @@ for query in ref_str.split("["):
         title_similar = 0
         result = None
         title_el = None
+        title_similar_bckup = -1
+        result_bckup = None
+        title_el_bckup = None
 
         for query_str in query_strs:
             if len(query_str) < 7:
@@ -129,30 +132,37 @@ for query in ref_str.split("["):
                     else :
                         title_similar = max(SequenceMatcher(None, title.lower(), q.lower()).ratio(), title_similar)
 
-                if title_similar > 0.5 and title_similar < 0.7:
-                    print(title.lower(), ";", title_similar)
+                if title_similar > title_similar_bckup:
+                    title_similar_bckup = title_similar
+                    result_bckup = result
+                    title_el_bckup = title_el
+
+                # if title_similar > 0.5 and title_similar < 0.7:
+                #     print(title.lower(), ";", title_similar)
 
                 if title_similar >= 0.7:
                     break
 
-            if title_similar >= 0.7:
+            if title_similar >= 0.9:
                 print(f"Title similarity : {title_similar}, ()")
                 break
         
         
-
-        if title_similar < 0.7 or title_el is None or result is None:
+        
+        if title_similar < 0.7 or title_el_bckup is None or result_bckup is None:
             print(f"{bcolors.WARNING}No results..{bcolors.WHITE}")
             summary_no_result += 1
             continue
 
+        title_el = title_el_bckup
+        result = result_bckup
+        title = title_el.get_text()
         
-        
-        # search_res = cv.get_rows(search=title)
-        # if len(search_res) > 0 and search_res[0].name == title:
-        #     summary_exsisting += 1
-        #     print("Paper already is in table")
-        #     continue
+        search_res = cv.get_rows(search=title)
+        if len(search_res) > 0 and search_res[0].name == title:
+            summary_exsisting += 1
+            print("Paper already is in table")
+            continue
 
         link = title_el['href']
         
@@ -190,13 +200,12 @@ for query in ref_str.split("["):
         for el in querys:
             _el = el
             el = el.lower()
-            # print(authors2, ";", el.replace(",", " ").replace(".", " ").replace("  ", " "), SequenceMatcher(None, authors2, el.replace(",", " ").replace(".", " ").replace("  ", " ")).ratio())
+            
             # if authors2 in el or SequenceMatcher(None, authors2, el.replace(",", " ").replace(".", " ").replace("  ", " ")).ratio() > 0.5:
             #     authors = _el
             #     flag_a = True
             #     continue
             
-            # print(journal2, ";", el)
             if journal2 in el or SequenceMatcher(None, journal2, el).ratio() > 0.5:
                 journal = _el
                 flag_j = True
@@ -226,13 +235,13 @@ for query in ref_str.split("["):
         year = int(year)
         citation_num = int(citation_num)
         
-        # row = cv.add_row()
-        # row.name = title
-        # row.link = link
-        # row.authors = authors
-        # row.year = year
-        # row.conference_journal = journal
-        # row.citation = citation_num
+        row = cv.add_row()
+        row.name = title
+        row.link = link
+        row.authors = authors
+        row.year = year
+        row.conference_journal = journal
+        row.citation = citation_num
 
         time.sleep(1)
 
