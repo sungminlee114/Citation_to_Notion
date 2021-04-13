@@ -183,5 +183,4 @@ for query in ref_str.split("["):
                 summary_many_no_matching += 1
 
 
-print(f"{bcolors.OKGREEN}[Summary]\nOut of {summary_total_queried} of querys,\nExsisting : {summary_exsisting}\nNo result : {summary_no_result}\n Many but no matching result : {summary_many_no_matching}\n{bcolors.White}")
-
+print(f"{bcolors.OKGREEN}[Summary]\nOut of {summary_total_queried} of querys,\nExsisting : {summary_exsisting}\nNo result : {summary_no_result}\n Many but no matching result : {summary_many_no_matching}\n{bcolors.WHITE}")
